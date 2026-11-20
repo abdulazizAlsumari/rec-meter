@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>مقياس التوصيات</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI',Tahoma,Arial,sans-serif;background:#0f1419;color:#e6e9ee;margin:0;padding:16px;direction:rtl}
+.wrap{max-width:1150px;margin:0 auto}
+h1{font-size:20px;margin:0 0 4px}
+.sub{color:#8b97a8;font-size:12.5px;margin-bottom:16px;line-height:1.7}
+.card{background:#1a2029;border:1px solid #2a3340;border-radius:10px;padding:14px;margin-bottom:14px}
+.card h2{font-size:15px;margin:0 0 10px;color:#7fd1ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
+label{display:block;font-size:11.5px;color:#8b97a8;margin-bottom:4px}
+input,select{width:100%;background:#0f1419;border:1px solid #2a3340;color:#e6e9ee;border-radius:6px;padding:7px;font-size:13px;direction:rtl;font-family:inherit}
+button{background:#2563eb;color:#fff;border:0;border-radius:6px;padding:8px 14px;font-size:13px;cursor:pointer;margin:4px 0 0 6px;font-family:inherit}
+button.g{background:#334155}
+button.r{background:#7f1d1d}
+button.x{background:transparent;color:#f87171;padding:2px 6px;margin:0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{border-bottom:1px solid #2a3340;padding:6px 4px;text-align:center;white-space:nowrap}
+th{color:#8b97a8;font-weight:600;font-size:11px}
+td input,td select{padding:4px;font-size:12px;min-width:68px}
+.pos{color:#4ade80}.neg{color:#f87171}.mut{color:#8b97a8}
+.out{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin-top:12px}
+.o{background:#0f1419;border:1px solid #2a3340;border-radius:8px;padding:9px;text-align:center}
+.o b{display:block;font-size:17px;margin-top:3px}
+.o span{font-size:10.5px;color:#8b97a8}
+.warn{background:#3b2a0a;border:1px solid #a16207;color:#fcd34d;padding:8px 10px;border-radius:6px;font-size:12px;margin-top:8px;line-height:1.6}
+.scroll{overflow-x:auto}
+.foot{color:#64748b;font-size:11px;line-height:1.8;border-top:1px solid #2a3340;padding-top:10px;margin-top:6px}
+.note{background:#0f1419;border:1px solid #2a3340;border-radius:8px;padding:10px;font-size:11.5px;color:#8b97a8;line-height:1.8}
+</style></head><body><div class="wrap">
+<h1>مقياس التوصيات — سجل وقياس</h1>
+<div class="sub">أداة حسابية بحتة لقياس أي توصية تصلك قبل الدخول وتسجيل نتيجتها بعدها. لا تصدر توصيات ولا تقترح شراء أو بيع. كل البيانات تُحفظ محلياً في متصفحك فقط ولا تُرسل لأي جهة.</div>
+
+<div class="card"><h2>١ · الإعدادات</h2>
+<div class="grid">
+<div><label>رأس المال الكامل (ريال)</label><input id="cap" type="number" step="100" value="100000" oninput="save();render()"></div>
+<div><label>سقف المخاطرة لكل صفقة (% من رأس المال)</label><input id="rsk" type="number" step="0.1" value="1" oninput="save();render()"></div>
+<div><label>العمولة لكل اتجاه (%)</label><input id="com" type="number" step="0.005" value="0.155" oninput="save();render()"></div>
+<div><label>أقصى تركيز بصفقة واحدة (% من رأس المال)</label><input id="con" type="number" step="1" value="20" oninput="save();render()"></div>
+</div>
+<div class="sub" style="margin:10px 0 0">سقف المخاطرة والتركيز أنت من يحددهما. الأداة لا تقترح قيمة مناسبة، بل تحسب فقط حجم المركز الذي تكون خسارته عند الوقف مساوية للسقف الذي أدخلته.</div>
+</div>
+
+<div class="card"><h2>٢ · قياس توصية قبل الدخول</h2>
+<div class="grid">
+<div><label>السهم</label><input id="f_name" placeholder="مثال: عطاء 4292"></div>
+<div><label>مصدر التوصية</label><input id="f_src" placeholder="اسم القناة / المحلل"></div>
+<div><label>التاريخ</label><input id="f_date" type="date"></div>
+<div><label>الوقت</label><input id="f_time" placeholder="10:29"></div>
+<div><label>سعر الدخول</label><input id="f_entry" type="number" step="0.01" oninput="calc()"></div>
+<div><label>الهدف</label><input id="f_target" type="number" step="0.01" oninput="calc()"></div>
+<div><label>الوقف</label><input id="f_stop" type="number" step="0.01" oninput="calc()"></div>
+</div>
+<div class="out" id="outs"></div>
+<div id="warns"></div>
+<button onclick="add()">أضف للسجل</button>
+<button class="g" onclick="clearForm()">تفريغ الحقول</button>
+</div>
+
+<div class="card"><h2>٣ · السجل المحفوظ</h2>
+<div class="scroll"><table id="tbl"></table></div>
+<div style="margin-top:10px">
+<button class="g" onclick="seed()">تعبئة التوصيات الخمس</button>
+<button class="g" onclick="exp()">تصدير JSON</button>
+<button class="g" onclick="document.getElementById('imp').click()">استيراد JSON</button>
+<input id="imp" type="file" accept=".json" style="display:none" onchange="impf(this)">
+<button class="r" onclick="wipe()">مسح الكل</button>
+</div>
+</div>
+
+<div class="card"><h2>٤ · الإحصاءات</h2><div class="out" id="stats"></div></div>
+<div class="card"><h2>٥ · الأداء حسب المصدر</h2><div class="scroll"><table id="src"></table></div></div>
+
+<div class="card"><h2>٦ · كيف تُقرأ الأرقام</h2>
+<div class="note">
+<b>العائد ÷ المخاطرة</b>: كم ريالاً مستهدفاً مقابل كل ريال تحت الخطر. أقل من 1 يعني أن الهدف أصغر من الوقف.<br>
+<b>نسبة التعادل</b>: أقل نسبة نجاح تجعل مجموع الصفقات صفراً. تُحسب = المخاطرة ÷ (المخاطرة + العائد).<br>
+<b>التوقع الرياضي</b>: متوسط الناتج الصافي للصفقة الواحدة بعد العمولة. هو الرقم الذي يصف المحصلة، لا نسبة تحقق الأهداف.<br>
+<b>أقصى تراجع</b>: أعمق نزول تحت سعر الدخول قبل الخروج، ويقيس مدى الضغط الذي تحمّلته الصفقة.
+</div></div>
+
+<div class="foot">
+هذه الأداة أداة قياس وتسجيل فقط. لا تقدّم نصيحة أو توصية استثمارية، ولا ترجّح توصية على أخرى، ولا تقترح عليك الدخول أو الخروج من أي ورقة مالية. حجم المركز المعروض هو ناتج عملية حسابية مباشرة من سقف المخاطرة الذي أدخلته أنت، وليس اقتراحاً بمبلغ مناسب للاستثمار. قرار الاستثمار يخصك وحدك أو بالرجوع لمستشار مالي مرخّص من هيئة السوق المالية. تأكد دائماً أن مصدر التوصية مرخّص من الهيئة.
+</div></div>
+<script>
+var K='tdw_tracker_v1';
+var SQ=String.fromCharCode(39);
+var S={cfg:{cap:100000,rsk:1,com:0.155,con:20},trades:[]};
+function ld(){try{var r=localStorage.getItem(K);if(r){var p=JSON.parse(r);if(p&&p.cfg&&p.trades)S=p;}}catch(e){}}
+function save(){S.cfg={cap:+v('cap'),rsk:+v('rsk'),com:+v('com'),con:+v('con')};try{localStorage.setItem(K,JSON.stringify(S));}catch(e){}}
+function v(i){return document.getElementById(i).value;}
+function n(x){return (x===null||x===undefined||x===''||isNaN(+x))?null:+x;}
+function f(x,d){return x===null?'—':(+x).toFixed(d===undefined?2:d);}
+function cls(x){return x>0?'pos':(x<0?'neg':'mut');}
+function netPct(entry,exit){var c=S.cfg.com/100;var b=entry*(1+c);var s2=exit*(1-c);return (s2-b)/b*100;}
+function measure(entry,target,stop){
+ var o={};
+ if(entry===null)return null;
+ o.rew=target===null?null:netPct(entry,target);
+ o.risk=stop===null?null:netPct(entry,stop);
+ o.gross=target===null?null:(target-entry)/entry*100;
+ o.rr=(o.rew!==null&&o.risk!==null&&o.risk<0)?(o.rew/Math.abs(o.risk)):null;
+ o.be=o.rr!==null?(Math.abs(o.risk)/(Math.abs(o.risk)+o.rew)*100):null;
+ o.commBite=(o.gross!==null&&o.gross!==0)?((o.gross-o.rew)/o.gross*100):null;
+ if(stop!==null&&entry>stop){
+   var riskAmt=S.cfg.cap*S.cfg.rsk/100;
+   var sh=Math.floor(riskAmt/(entry-stop));
+   var maxVal=S.cfg.cap*S.cfg.con/100;
+   o.capped=false;
+   if(sh*entry>maxVal){sh=Math.floor(maxVal/entry);o.capped=true;}
+   o.shares=sh;o.val=sh*entry;o.lossAtStop=sh*(entry-stop);
+   o.gainAtTarget=target!==null?sh*(target-entry):null;
+ }
+ return o;
+}
+function box(l,val,c){return '<div class="o"><span>'+l+'</span><b class="'+c+'">'+val+'</b></div>';}
+function calc(){
+ var e=n(v('f_entry')),t=n(v('f_target')),st=n(v('f_stop'));
+ var o=measure(e,t,st);var h='';var w='';
+ if(!o){document.getElementById('outs').innerHTML='<div class="o"><span>أدخل سعر الدخول للبدء</span></div>';document.getElementById('warns').innerHTML='';return;}
+ h+=box('العائد الصافي للهدف',o.rew===null?'—':f(o.rew)+'%',cls(o.rew));
+ h+=box('المخاطرة الصافية للوقف',o.risk===null?'—':f(o.risk)+'%',o.risk===null?'mut':'neg');
+ h+=box('العائد ÷ المخاطرة',o.rr===null?'غير معرّفة':f(o.rr),o.rr===null?'mut':(o.rr>=1?'pos':'neg'));
+ h+=box('نسبة النجاح اللازمة للتعادل',o.be===null?'—':f(o.be,1)+'%',o.be===null?'mut':(o.be>60?'neg':'pos'));
+ h+=box('ما تأكله العمولة من الهدف',o.commBite===null?'—':f(o.commBite,1)+'%','mut');
+ h+=box('عدد الأسهم',o.shares===undefined?'—':o.shares,'mut');
+ h+=box('قيمة المركز',o.val===undefined?'—':f(o.val,0)+' ر.س','mut');
+ h+=box('الخسارة عند الوقف',o.lossAtStop===undefined?'—':'-'+f(o.lossAtStop,0)+' ر.س','neg');
+ h+=box('الربح عند الهدف',(o.gainAtTarget===undefined||o.gainAtTarget===null)?'—':'+'+f(o.gainAtTarget,0)+' ر.س','pos');
+ if(st===null)w+='<div class="warn">لا يوجد وقف خسارة في هذه التوصية ⇐ المخاطرة غير معرّفة، ولا يمكن حساب حجم المركز من سقف المخاطرة.</div>';
+ if(o.rr!==null&&o.rr<1)w+='<div class="warn">العائد أصغر من المخاطرة ('+f(o.rr)+') ⇐ تحتاج نسبة نجاح '+f(o.be,1)+'% فأكثر لمجرد التعادل.</div>';
+ if(o.capped)w+='<div class="warn">عدد الأسهم خُفّض لأن قيمة المركز تجاوزت سقف التركيز الذي حددته ('+S.cfg.con+'%).</div>';
+ if(o.commBite!==null&&o.commBite>25)w+='<div class="warn">العمولة تأكل '+f(o.commBite,1)+'% من الهدف ⇐ الهدف ضيق جداً مقارنة بالتكلفة.</div>';
+ if(o.rew!==null&&o.rew<1&&o.rew>0)w+='<div class="warn">صافي العائد المستهدف أقل من 1% ⇐ هامش خطأ ضيق جداً.</div>';
+ document.getElementById('outs').innerHTML=h;document.getElementById('warns').innerHTML=w;
+}
+function add(){
+ var e=n(v('f_entry'));if(e===null){alert('أدخل سعر الدخول');return;}
+ S.trades.push({id:Date.now()+Math.random(),name:v('f_name')||'—',src:v('f_src')||'—',date:v('f_date')||'',time:v('f_time')||'',entry:e,target:n(v('f_target')),stop:n(v('f_stop')),status:'open',cur:null,low:null});
+ save();render();clearForm();
+}
+function clearForm(){['f_name','f_src','f_date','f_time','f_entry','f_target','f_stop'].forEach(function(i){document.getElementById(i).value='';});calc();}
+function upd(id,k,val){S.trades.forEach(function(t){if(t.id==id){t[k]=(k==='status')?val:n(val);}});save();render();}
+function del(id){S.trades=S.trades.filter(function(t){return t.id!=id;});save();render();}
+function res(t){
+ var exit=null;
+ if(t.status==='target')exit=(t.cur!==null&&t.cur!==undefined)?t.cur:t.target;
+ else if(t.status==='stop')exit=(t.cur!==null&&t.cur!==undefined)?t.cur:t.stop;
+ else exit=t.cur;
+ if(exit===null||exit===undefined||t.entry===null)return null;
+ return netPct(t.entry,exit);
+}
+function closed(t){return t.status!=='open';}
+function opt(val,lab,cur){return '<option value="'+val+'"'+(cur===val?' selected':'')+'>'+lab+'</option>';}
+function render(){
+ document.getElementById('cap').value=S.cfg.cap;document.getElementById('rsk').value=S.cfg.rsk;
+ document.getElementById('com').value=S.cfg.com;document.getElementById('con').value=S.cfg.con;
+ var h='<tr><th>السهم</th><th>المصدر</th><th>التاريخ</th><th>الوقت</th><th>دخول</th><th>هدف</th><th>وقف</th><th>ع÷م</th><th>تعادل%</th><th>الحالة</th><th>سعر حالي/خروج</th><th>أدنى سعر بعد الدخول</th><th>أقصى تراجع</th><th>الصافي</th><th></th></tr>';
+ if(!S.trades.length)h+='<tr><td colspan="15" class="mut">لا توجد صفقات مسجلة بعد</td></tr>';
+ S.trades.forEach(function(t){
+  var o=measure(t.entry,t.target,t.stop)||{};
+  var r=res(t);var mae=(t.low!==null&&t.low!==undefined&&t.entry)?((t.low-t.entry)/t.entry*100):null;
+  h+='<tr><td>'+t.name+'</td><td>'+t.src+'</td><td>'+(t.date||'—')+'</td><td>'+(t.time||'—')+'</td>'
+   +'<td>'+f(t.entry)+'</td><td>'+f(t.target)+'</td><td>'+(t.stop===null?'<span class="neg">بلا وقف</span>':f(t.stop))+'</td>'
+   +'<td class="'+((o.rr===null||o.rr===undefined)?'mut':(o.rr>=1?'pos':'neg'))+'">'+((o.rr===null||o.rr===undefined)?'—':f(o.rr))+'</td>'
+   +'<td>'+((o.be===null||o.be===undefined)?'—':f(o.be,1)+'%')+'</td>'
+   +'<td><select onchange="upd('+t.id+','+SQ+'status'+SQ+',this.value)">'
+   +opt('open','مفتوحة',t.status)+opt('target','تحقق الهدف',t.status)+opt('stop','ضرب الوقف',t.status)+opt('manual','خروج يدوي',t.status)+'</select></td>'
+   +'<td><input type="number" step="0.01" value="'+((t.cur===null||t.cur===undefined)?'':t.cur)+'" onchange="upd('+t.id+','+SQ+'cur'+SQ+',this.value)"></td>'
+   +'<td><input type="number" step="0.01" value="'+((t.low===null||t.low===undefined)?'':t.low)+'" onchange="upd('+t.id+','+SQ+'low'+SQ+',this.value)"></td>'
+   +'<td class="'+(mae===null?'mut':'neg')+'">'+(mae===null?'—':f(mae)+'%')+'</td>'
+   +'<td class="'+cls(r)+'"><b>'+(r===null?'—':f(r)+'%')+'</b></td>'
+   +'<td><button class="x" onclick="del('+t.id+')">حذف</button></td></tr>';
+ });
+ document.getElementById('tbl').innerHTML=h;
+ stats();sources();calc();
+}
+function stats(){
+ var cl=S.trades.filter(function(t){return closed(t)&&res(t)!==null;});
+ var op=S.trades.filter(function(t){return !closed(t);});
+ var wins=cl.filter(function(t){return res(t)>0;});
+ var loss=cl.filter(function(t){return res(t)<=0;});
+ var sum=function(a){return a.reduce(function(x,t){return x+res(t);},0);};
+ var hit=cl.length?wins.length/cl.length*100:null;
+ var aw=wins.length?sum(wins)/wins.length:null;
+ var al=loss.length?sum(loss)/loss.length:null;
+ var expy=cl.length?sum(cl)/cl.length:null;
+ var opAvg=op.filter(function(t){return res(t)!==null;});
+ var opA=opAvg.length?sum(opAvg)/opAvg.length:null;
+ var noStop=S.trades.filter(function(t){return t.stop===null;}).length;
+ var h='';
+ h+=box('توصيات مسجلة',S.trades.length,'mut');
+ h+=box('مغلقة',cl.length,'mut');
+ h+=box('نسبة تحقق الأهداف',hit===null?'—':f(hit,1)+'%','mut');
+ h+=box('متوسط الرابحة',aw===null?'—':f(aw)+'%','pos');
+ h+=box('متوسط الخاسرة',al===null?'—':f(al)+'%','neg');
+ h+=box('التوقع الرياضي للصفقة',expy===null?'—':f(expy)+'%',cls(expy));
+ h+=box('مجموع المغلقة',cl.length?f(sum(cl))+'%':'—',cls(cl.length?sum(cl):0));
+ h+=box('مفتوحة الآن',op.length,'mut');
+ h+=box('متوسط المفتوحة',opA===null?'—':f(opA)+'%',cls(opA));
+ h+=box('بلا وقف خسارة',noStop,noStop?'neg':'mut');
+ document.getElementById('stats').innerHTML=h;
+}
+function sources(){
+ var m={};
+ S.trades.forEach(function(t){var k=t.src||'—';if(!m[k])m[k]={n:0,c:0,w:0,s:0,ns:0};m[k].n++;if(t.stop===null)m[k].ns++;
+  if(closed(t)&&res(t)!==null){m[k].c++;m[k].s+=res(t);if(res(t)>0)m[k].w++;}});
+ var h='<tr><th>المصدر</th><th>عدد</th><th>مغلقة</th><th>نسبة النجاح</th><th>التوقع الرياضي</th><th>المجموع</th><th>بلا وقف</th></tr>';
+ var ks=Object.keys(m);
+ if(!ks.length)h+='<tr><td colspan="7" class="mut">—</td></tr>';
+ ks.forEach(function(k){var d=m[k];var e=d.c?d.s/d.c:null;
+  h+='<tr><td>'+k+'</td><td>'+d.n+'</td><td>'+d.c+'</td><td>'+(d.c?f(d.w/d.c*100,1)+'%':'—')+'</td>'
+   +'<td class="'+cls(e)+'">'+(e===null?'—':f(e)+'%')+'</td>'
+   +'<td class="'+cls(d.s)+'">'+(d.c?f(d.s)+'%':'—')+'</td><td>'+d.ns+'</td></tr>';});
+ document.getElementById('src').innerHTML=h;
+}
+function seed(){
+ var S5=[
+  {name:'لجام 1830',src:'التوصيات الأسبوعية',date:'2026-11-15',time:'10:29',entry:82.30,target:83.20,stop:null,status:'target',cur:83.20,low:80.20},
+  {name:'مكة 4100',src:'التوصيات الأسبوعية',date:'2026-11-15',time:'10:36',entry:64.40,target:65.50,stop:null,status:'target',cur:65.50,low:63.45},
+  {name:'الخليج للتدريب 4290',src:'التوصيات الأسبوعية',date:'2026-11-17',time:'10:40',entry:10.70,target:10.85,stop:null,status:'target',cur:10.85,low:10.27},
+  {name:'عطاء 4292',src:'التوصيات الأسبوعية',date:'2026-11-17',time:'11:15',entry:30.70,target:31.00,stop:27.70,status:'open',cur:28.20,low:28.08},
+  {name:'جمجوم فارما 4015',src:'التوصيات الأسبوعية',date:'2026-11-18',time:'10:16',entry:120.20,target:121.50,stop:114.00,status:'open',cur:117.10,low:116.30}
+ ];
+ S5.forEach(function(t){t.id=Date.now()+Math.random();S.trades.push(t);});
+ save();render();
+}
+function exp(){var b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='tracker-backup.json';a.click();}
+function impf(el){var fr=new FileReader();fr.onload=function(){try{S=JSON.parse(fr.result);save();render();}catch(e){alert('ملف غير صالح');}};fr.readAsText(el.files[0]);}
+function wipe(){if(confirm('مسح كل الصفقات المسجلة؟')){S.trades=[];save();render();}}
+ld();render();
+</script>
+</body></html>
