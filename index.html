@@ -230,5 +230,39 @@ function exp(){var b=new Blob([JSON.stringify(S,null,2)],{type:'application/json
 function impf(el){var fr=new FileReader();fr.onload=function(){try{S=JSON.parse(fr.result);save();render();}catch(e){alert('ملف غير صالح');}};fr.readAsText(el.files[0]);}
 function wipe(){if(confirm('مسح كل الصفقات المسجلة؟')){S.trades=[];save();render();}}
 ld();render();
+/* ===== حفظ دائم وموثوق (v2) ===== */
+var BK=K+'_bk';
+var LAST=K+'_at';
+function okStore(){try{localStorage.setItem('_p','1');localStorage.removeItem('_p');return true;}catch(e){return false;}}
+function badge(t,c){var el=document.getElementById('sbadge');if(el){el.textContent=t;el.style.color=c||'#8b97a8';}}
+function arT(d){try{return d.toLocaleString('ar-SA');}catch(e){return d.toISOString().slice(0,16).replace('T',' ');}}
+function mkBk(){try{localStorage.setItem(BK,JSON.stringify(S));localStorage.setItem(LAST,new Date().toISOString());}catch(e){}}
+var _save=save;
+save=function(){_save();var ok=false;
+ try{var r=localStorage.getItem(K);ok=!!(r&&JSON.parse(r).trades);}catch(e){ok=false;}
+ if(ok){mkBk();badge('السجل محفوظ تلقائياً — آخر حفظ '+arT(new Date()),'#4ade80');}
+ else{badge('تعذّر الحفظ في هذا المتصفح — صدّر نسخة JSON فوراً','#f87171');}}
+function restoreBk(){var b=null;try{b=localStorage.getItem(BK);}catch(e){}
+ if(!b){alert('لا توجد نسخة احتياطية داخلية');return;}
+ if(!confirm('استبدال السجل الحالي بآخر نسخة احتياطية محفوظة؟'))return;
+ try{var p=JSON.parse(b);if(p&&p.cfg&&p.trades){S=p;try{localStorage.setItem(K,b);}catch(e){}render();badge('استُعيد السجل من النسخة الاحتياطية','#fcd34d');}}
+ catch(e){alert('النسخة الاحتياطية تالفة');}}
+(function boot2(){
+ try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+ var st=document.createElement('style');
+ st.textContent='#sbadge{position:fixed;inset-inline-start:10px;bottom:10px;background:#0f1419;border:1px solid #2a3340;border-radius:8px;padding:6px 10px;font-size:11.5px;z-index:99;max-width:92vw}';
+ document.head.appendChild(st);
+ var bd=document.createElement('div');bd.id='sbadge';document.body.appendChild(bd);
+ var sb=document.querySelector('button[onclick="seed()"]');
+ if(sb&&sb.parentNode){var nb=document.createElement('button');nb.className='g';nb.textContent='استعادة النسخة الاحتياطية';nb.onclick=restoreBk;sb.parentNode.appendChild(nb);}
+ var has=false;try{var r=localStorage.getItem(K);has=!!(r&&JSON.parse(r).trades);}catch(e){}
+ if(!has){var bk=null;try{bk=localStorage.getItem(BK);}catch(e){}
+  if(bk){try{var p=JSON.parse(bk);if(p&&p.cfg&&p.trades){S=p;localStorage.setItem(K,bk);render();badge('استُعيد السجل تلقائياً من النسخة الاحتياطية','#fcd34d');return;}}catch(e){}}
+  if(!S.trades.length){seed();badge('أول فتح: حُمّلت التوصيات الخمس تلقائياً، وكل تعديل بعدها يُحفظ وحده','#8b97a8');return;}}
+ var at=null;try{at=localStorage.getItem(LAST);}catch(e){}
+ var good=okStore();
+ badge(good?('السجل محفوظ تلقائياً في هذا المتصفح'+(at?' — آخر حفظ '+arT(new Date(at)):'')):'هذا المتصفح يمنع الحفظ — استخدم تصدير JSON',good?'#8b97a8':'#f87171');
+ window.addEventListener('beforeunload',mkBk);
+})();
 </script>
 </body></html>
